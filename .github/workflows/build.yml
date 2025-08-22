@@ -15,6 +15,24 @@ jobs:
       id-token: 'write'
 
     steps:
+      # --- مرحله جدید برای اشکال‌زدایی ---
+      - name: 'Debug Secrets'
+        run: |
+          if [ -z "${{ secrets.GCP_WIF_PROVIDER }}" ]; then
+            echo "ERROR: GCP_WIF_PROVIDER secret is NOT set or is empty!"
+            exit 1
+          else
+            echo "SUCCESS: GCP_WIF_PROVIDER secret is set."
+          fi
+
+          if [ -z "${{ secrets.GCP_SA_EMAIL }}" ]; then
+            echo "ERROR: GCP_SA_EMAIL secret is NOT set or is empty!"
+            exit 1
+          else
+            echo "SUCCESS: GCP_SA_EMAIL secret is set."
+          fi
+      # --- پایان مرحله اشکال‌زدایی ---
+
       - name: 'Authenticate to Google Cloud'
         id: 'auth'
         uses: 'google-github-actions/auth@v2'
