@@ -1,55 +1,39 @@
-# نام ورک‌فلو
 name: Create Firestore Database Quarterly
 
-# تریگر (زمان‌بندی)
-# این کد در اولین روز ماه‌های ژانویه، آوریل، ژوئیه و اکتبر در ساعت ۵:۳۰ بامداد (UTC) اجرا می‌شود.
-# یعنی هر ۳ ماه یک‌بار.
 on:
   schedule:
     - cron: '30 5 1 1,4,7,10 *'
-  # این خط به شما اجازه می‌دهد تا ورک‌فلو را به صورت دستی هم اجرا کنید.
   workflow_dispatch:
 
-# تعریف جاب (مجموعه کارها)
 jobs:
   create-firestore:
-    # نام جاب
     name: 'Create Google Cloud Firestore Database'
-    # استفاده از آخرین نسخه اوبونتو برای اجرا
     runs-on: ubuntu-latest
     
-    # مجوزهای لازم برای اتصال امن به گوگل کلاد از طریق OIDC
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-      # مرحله اول: احراز هویت در گوگل کلاد
       - name: 'Authenticate to Google Cloud'
         id: 'auth'
         uses: 'google-github-actions/auth@v2'
         with:
-          # مقادیر این بخش از Secrets ریپازیتوری شما خوانده می‌شود
           workload_identity_provider: '${{ secrets.GCP_WIF_PROVIDER }}'
           service_account: '${{ secrets.GCP_SA_EMAIL }}'
 
-      # مرحله دوم: نصب و راه‌اندازی gcloud CLI
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
           project_id: '${{ secrets.GCP_PROJECT_ID }}'
 
-      # مرحله سوم: اجرای دستور ساخت دیتابیس Firestore
-      # اگر دیتابیس از قبل وجود داشته باشد، این دستور با خطا مواجه می‌شود اما ورک‌فلو متوقف نمی‌شود
       - name: 'Create Firestore Database'
         run: |
           gcloud beta firestore databases create \
             --location="YOUR_DATABASE_LOCATION" \
             --project="${{ secrets.GCP_PROJECT_ID }}"
-        # اگر دستور با خطا مواجه شد، به کار ادامه بده
         continue-on-error: true
 
-      # مرحله چهارم: بررسی وضعیت
       - name: Check creation status
         run: |
           echo "Firestore database creation command executed. If a database already existed, the previous step would have failed gracefully."
